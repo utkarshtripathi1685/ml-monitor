@@ -1,0 +1,108 @@
+# docker-compose.yml
+# This file defines all the services (containers) our project needs.
+# Run everything with: docker-compose up
+# Stop everything with: docker-compose down
+
+version: "3.9"   # which version of docker-compose syntax we're using
+
+services:         # "services" is docker-compose's word for containers
+
+  # ─────────────────────────────────────────
+  # ZOOKEEPER — Kafka needs this to run.
+  # Think of it as Kafka's manager/coordinator.
+  # You don't interact with it directly, it just needs to exist.
+  # ─────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    # "image" means: download this pre-built container from Docker Hub.
+    # We're using Confluent's official Zookeeper image, version 7.4.0.
+    # You don't write this image — it's like pip installing a library.
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      # environment variables are like settings passed into the container.
+      # Zookeeper listens on port 2181 by default.
+      ZOOKEEPER_TICK_TIME: 2000
+      # heartbeat interval in milliseconds — how often Zookeeper checks health.
+
+  # ─────────────────────────────────────────
+  # KAFKA — our message broker / streaming backbone.
+  # Producers send events TO Kafka topics.
+  # Consumers read events FROM Kafka topics.
+  # ─────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+      # Kafka won't start until Zookeeper is running.
+      # docker-compose respects this order.
+    ports:
+      - "9092:9092"
+      # format is "host_port:container_port"
+      # your Python code on the HOST machine connects via localhost:9092
+      # inside Docker, Kafka listens on container port 9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      # unique ID for this Kafka broker (we only have one)
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # tells Kafka where Zookeeper is. "zookeeper" here is the
+      # service name above — docker-compose creates DNS so containers
+      # can find each other by service name.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      # the address Kafka tells clients to connect to
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # replication = how many copies of data to keep.
+      # in production you'd use 3. We use 1 (no copies) for local dev.
+
+  # ─────────────────────────────────────────
+  # REDIS — our feature store (fast in-memory key-value store).
+  # We store transformed features here so the model can
+  # retrieve them in milliseconds during inference.
+  # ─────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    # "alpine" = a very small Linux distro. Keeps image size tiny.
+    ports:
+      - "6379:6379"
+      # Redis default port. Your Python code connects to localhost:6379.
+    command: redis-server --appendonly yes
+    # "command" overrides the default start command of the container.
+    # --appendonly yes = persist data to disk (survives container restarts)
+    volumes:
+      - redis_data:/data
+      # "volumes" = attach persistent storage to the container.
+      # Without this, all Redis data vanishes when container stops.
+      # "redis_data" is a named volume defined at the bottom of this file.
+
+  # ─────────────────────────────────────────
+  # MLFLOW — tracks experiments, stores models, acts as model registry.
+  # Think of it as GitHub but for ML experiments and models.
+  # ─────────────────────────────────────────
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.1
+    ports:
+      - "5000:5000"
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    # breaking this down:
+    # mlflow server        → start the MLflow tracking server
+    # --host 0.0.0.0       → listen on all network interfaces
+    #                        (0.0.0.0 means "accept connections from anywhere")
+    #                        If you use 127.0.0.1, only the container itself can connect
+    # --backend-store-uri  → where to store run metadata (we use SQLite, a file-based DB)
+    # --default-artifact-root → where to store model files, plots, etc.
+    volumes:
+      - mlflow_data:/mlflow
+      # persists the SQLite DB and model artifacts across restarts
+
+# ─────────────────────────────────────────
+# VOLUMES — named persistent storage blocks.
+# Docker containers are ephemeral by default (data lost on stop).
+# Volumes survive container restarts.
+# ─────────────────────────────────────────
+volumes:
+  redis_data:    # referenced by the redis service above
+  mlflow_data:   # referenced by the mlflow service above

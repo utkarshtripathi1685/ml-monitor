@@ -1,0 +1,7 @@
+.env                  # contains passwords/secrets — never commit
+__pycache__/          # Python bytecode — auto-generated, not your code
+*.pyc                 # compiled Python files
+.venv/                # your virtual environment — huge folder, not needed
+mlruns/               # MLflow run data — can be regenerated
+*.egg-info/
+node_modules/         # Next.js dependencies — huge, regenerated via npm install

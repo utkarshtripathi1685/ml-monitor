@@ -78,7 +78,7 @@ services:         # "services" is docker-compose's word for containers
   # Think of it as GitHub but for ML experiments and models.
   # ─────────────────────────────────────────
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.11.1
+    image: ghcr.io/mlflow/mlflow:v3.10.1
     ports:
       - "5000:5000"
     command: >

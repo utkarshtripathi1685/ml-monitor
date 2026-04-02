@@ -47,7 +47,10 @@ services:         # "services" is docker-compose's word for containers
       # tells Kafka where Zookeeper is. "zookeeper" here is the
       # service name above — docker-compose creates DNS so containers
       # can find each other by service name.
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       # the address Kafka tells clients to connect to
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       # replication = how many copies of data to keep.

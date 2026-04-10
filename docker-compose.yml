@@ -3,7 +3,7 @@
 # Run everything with: docker-compose up
 # Stop everything with: docker-compose down
 
-version: "3.9"   # which version of docker-compose syntax we're using
+#version: "3.9"   # which version of docker-compose syntax we're using
 
 services:         # "services" is docker-compose's word for containers
 

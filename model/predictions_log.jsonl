@@ -1,0 +1,7 @@
+{"transaction_id": 0, "fraud_probability": 0.18953199684619904, "prediction": 0, "timestamp": "2026-04-10T09:23:48.795297", "latency_ms": 18.38, "model_version": "fraud-classifier"}
+{"transaction_id": 100, "fraud_probability": 0.07304005324840546, "prediction": 0, "timestamp": "2026-04-10T09:23:50.876117", "latency_ms": 10.28, "model_version": "fraud-classifier"}
+{"transaction_id": 500, "fraud_probability": 0.2989988923072815, "prediction": 0, "timestamp": "2026-04-10T09:23:52.937998", "latency_ms": 9.13, "model_version": "fraud-classifier"}
+{"transaction_id": 0, "fraud_probability": 0.18953199684619904, "prediction": 0, "timestamp": "2026-04-10T09:27:20.529083", "latency_ms": 6.38, "model_version": "fraud-classifier"}
+{"transaction_id": 100, "fraud_probability": 0.07304005324840546, "prediction": 0, "timestamp": "2026-04-10T09:27:22.579810", "latency_ms": 4.12, "model_version": "fraud-classifier"}
+{"transaction_id": 500, "fraud_probability": 0.2989988923072815, "prediction": 0, "timestamp": "2026-04-10T09:27:24.636947", "latency_ms": 6.56, "model_version": "fraud-classifier"}
+{"transaction_id": 1000, "fraud_probability": 0.07436910271644592, "prediction": 0, "timestamp": "2026-04-10T09:27:26.689914", "latency_ms": 6.69, "model_version": "fraud-classifier"}

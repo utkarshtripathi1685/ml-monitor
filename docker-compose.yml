@@ -109,3 +109,80 @@ services:         # "services" is docker-compose's word for containers
 volumes:
   redis_data:    # referenced by the redis service above
   mlflow_data:   # referenced by the mlflow service above
+  postgres_data: # referenced by the postgres service below
+
+  # docker-compose.yml — add these after your existing services
+
+  # ─────────────────────────────────────────
+  # AIRFLOW DATABASE — stores DAG runs, task states, logs
+  # Airflow needs a proper database (not SQLite) for production
+  # ─────────────────────────────────────────
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # ─────────────────────────────────────────
+  # AIRFLOW WEBSERVER — the UI at localhost:8080
+  # ─────────────────────────────────────────
+  airflow-webserver:
+    image: apache/airflow:2.8.1
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      # LocalExecutor = run tasks in subprocesses on same machine
+      # in production you'd use CeleryExecutor or KubernetesExecutor
+      
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      # tells Airflow where its metadata database is
+      # format: dialect+driver://user:password@host/dbname
+      
+      AIRFLOW__CORE__FERNET_KEY: 'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg='
+      # Fernet key = used to encrypt sensitive data in the DB (passwords etc.)
+      # in production generate a real one: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      # don't load Airflow's built-in example DAGs — keeps UI clean
+      
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # pass our service config to Airflow tasks
+      
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      # mount our local dags/ folder into the container
+      # any .py file we put in airflow/dags/ appears in the Airflow UI
+      - ./model:/opt/airflow/model
+      # mount our model folder so the DAG can run train.py
+    ports:
+      - "8080:8080"
+    command: webserver
+    # start the web UI
+
+  # ─────────────────────────────────────────
+  # AIRFLOW SCHEDULER — actually runs the DAGs
+  # separate from webserver so UI stays responsive during heavy runs
+  # ─────────────────────────────────────────
+  airflow-scheduler:
+    image: apache/airflow:2.8.1
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg='
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./model:/opt/airflow/model
+    command: scheduler
+    # runs the scheduler process (separate from webserver)

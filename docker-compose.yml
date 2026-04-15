@@ -100,17 +100,8 @@ services:         # "services" is docker-compose's word for containers
     volumes:
       - mlflow_data:/mlflow
       # persists the SQLite DB and model artifacts across restarts
-
-# ─────────────────────────────────────────
-# VOLUMES — named persistent storage blocks.
-# Docker containers are ephemeral by default (data lost on stop).
-# Volumes survive container restarts.
-# ─────────────────────────────────────────
-volumes:
-  redis_data:    # referenced by the redis service above
-  mlflow_data:   # referenced by the mlflow service above
-  postgres_data: # referenced by the postgres service below
-
+  
+  
   # docker-compose.yml — add these after your existing services
 
   # ─────────────────────────────────────────
@@ -186,3 +177,14 @@ volumes:
       - ./model:/opt/airflow/model
     command: scheduler
     # runs the scheduler process (separate from webserver)
+
+# ─────────────────────────────────────────
+# VOLUMES — named persistent storage blocks.
+# Docker containers are ephemeral by default (data lost on stop).
+# Volumes survive container restarts.
+# ─────────────────────────────────────────
+volumes:
+  redis_data:    # referenced by the redis service above
+  mlflow_data:   # referenced by the mlflow service above
+  postgres_data: # referenced by the postgres service above
+  

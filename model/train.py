@@ -16,6 +16,7 @@ import os
 MLFLOW_URI      = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 EXPERIMENT_NAME = "fraud-detection"
 MODEL_NAME      = "fraud-classifier"
+FEATURE_NAMES = [f"V{i}" for i in range(1, 29)] + ["Amount"]
 
 # ── 3. Connect to MLflow ──────────────────────────────────────────────
 mlflow.set_tracking_uri(MLFLOW_URI)
@@ -96,7 +97,7 @@ with mlflow.start_run(run_name="xgboost-baseline") as run:
     )
 
     # Save and log baseline stats for drift detection
-    baseline_stats = pd.DataFrame(X_train_scaled).describe()
+    baseline_stats = pd.DataFrame(X_train_scaled, columns=FEATURE_NAMES).describe()
     baseline_stats.to_csv("baseline_stats.csv")
     mlflow.log_artifact("baseline_stats.csv")
 
